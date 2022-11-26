@@ -2,7 +2,9 @@ import './css/common.css';
 
 import '../src/js/dom/theme-switch';
 import PhotoApiService from './js/api-service';
-import { form, photoContainer } from './js/refs';
+import { form, photoContainer, modalContent, themeButton } from './js/refs';
+console.log('🌺 -> themeButton', themeButton);
+console.log('🌺 -> modalContent', modalContent);
 import photoTpl from './templates/photo.hbs';
 import LoadMoreBtn from './js/components/load-more-btn';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
