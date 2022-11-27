@@ -1,83 +1,78 @@
 import './css/common.css';
-
-import '../src/js/dom/theme-switch';
 import PhotoApiService from './js/api-service';
-import { form, photoContainer, modalContent, themeButton } from './js/refs';
-console.log('🌺 -> themeButton', themeButton);
-console.log('🌺 -> modalContent', modalContent);
-import photoTpl from './templates/photo.hbs';
-import LoadMoreBtn from './js/components/load-more-btn';
-import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import photoTpl from './templates/photoTpl.hbs';
+import modalTpl from './templates/modalTpl.hbs';
 
-import './js/dom/modal';
+//змінні
+const refs = {
+  galleryContainer: document.querySelector('.gallery'),
+  searchForm: document.querySelector('.search-form'),
+  galleryImage: '',
+  //   galleryImage: document.querySelector('.gallery .gallery-image'),
+  formEl: document.querySelector('form'),
+  modalEl: document.querySelector('.modal'),
+  pageEl: document.querySelector('body'),
+  btnClose: '',
+};
 
 const photoApiService = new PhotoApiService();
-//налаштування для кнопки завантаження LoadMoreBtn
-const loadMoreBtn = new LoadMoreBtn({
-  selector: '[data-action="load-more"]',
-  hidden: true,
-});
 
-form.addEventListener('submit', onSearchQuery);
-//при кліку - викликати продовження отриманих фото
-loadMoreBtn.refs.button.addEventListener('click', fetchPhoto);
+//завантажити зображення без запиту користувача
+fetchPhotoDefault();
+async function fetchPhotoDefault() {
+  const response = await photoApiService.fetchPhotoDefault();
+  appendPhotoMarkup(response);
+}
 
+//відслідковувати запит, якщо є - видаємо результат
+refs.formEl.addEventListener('submit', onSearchQuery);
 function onSearchQuery(e) {
   e.preventDefault();
 
-  // отримати та записати в клас запит користувача
   photoApiService.searchQuery = e.currentTarget.elements.searchQuery.value;
-
-  //перевірити отриманий  запит на пустоту
-  if (photoApiService.query.trim() === '') {
-    return Notify.failure(
-      'Sorry, there are no images matching your search query. Please try again.',
-    );
-  }
-
-  //оновити лічильник сторінок
   photoApiService.resetPage();
-  //очистити поле дяля результатів
   clearPhotoContainer();
-  //отримати результат (фото)
   fetchPhoto();
 }
-
-function appendPhotoMarkup(photo) {
-  photoContainer.insertAdjacentHTML('beforeend', photoTpl(photo.hits));
-}
-
+//завантажити зображення за запитом користувача
 async function fetchPhoto() {
-  try {
-    loadMoreBtn.show();
-    loadMoreBtn.disable();
-
-    await photoApiService.fetchPhoto().then(photo => {
-      //чи є результат за запитом?
-      if (photo.totalHits === 0) {
-        loadMoreBtn.hide();
-        return Notify.failure(
-          'Sorry, there are no images matching your search query. Please try again.',
-        );
-      }
-      //вставити отримані фото
-      appendPhotoMarkup(photo);
-      loadMoreBtn.enable();
-      Notify.success(`"Hooray! We found ${photo.totalHits} images."`);
-
-      //скільки сторінок результату
-      let totalPages = photo.totalHits / photoApiService.per_page;
-      //інформуваня про закінчення фото за запитом
-      if (photoApiService.page > totalPages) {
-        loadMoreBtn.hide();
-        return Notify.info("We're sorry, but you've reached the end of search results.");
-      }
-    });
-  } catch (error) {
-    console.log(error);
-  }
+  const response = await photoApiService.fetchPhoto();
+  appendPhotoMarkup(response);
 }
 
+//вставити розмітку фото карток
+function appendPhotoMarkup(photo) {
+  refs.galleryContainer.insertAdjacentHTML('beforeend', photoTpl(photo.hits));
+
+  refs.galleryImage = document.querySelectorAll('.gallery .gallery-image');
+
+  refs.galleryImage.forEach(image =>
+    image.addEventListener('click', () => openModal(image.dataset.id)),
+  );
+}
+//вставити розмітку модального вікна
+function appendModalMarkup(photo) {
+  refs.modalEl.innerHTML = modalTpl(photo);
+}
+
+//очистити  контейнер
 function clearPhotoContainer() {
-  photoContainer.innerHTML = '';
+  refs.galleryContainer.innerHTML = '';
+}
+
+async function openModal(id) {
+  console.log(' -> openModal -> id', id);
+  refs.modalEl.classList.add('modal--show');
+  refs.pageEl.classList.add('stop-scrolling');
+
+  const response = await photoApiService.fetchPhotoById(id);
+  appendModalMarkup(response[0]);
+
+  refs.btnClose = document.querySelector('.modal__button-close');
+  refs.btnClose.addEventListener('click', () => closeModal());
+}
+
+function closeModal() {
+  refs.modalEl.classList.remove('modal--show');
+  refs.pageEl.classList.remove('stop-scrolling');
 }
