@@ -162,3 +162,38 @@ ul li {
   height: 100%;
   overflow: hidden;
 }
+
+a {
+  text-decoration: none;
+}
+.buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.link_favorites,
+.link_show {
+  display: inline-block;
+  min-width: 100px;
+  padding: 10px;
+
+  font-size: 25px;
+  border-radius: 5px;
+
+  background-color: #ffd80e;
+  color: black;
+}
+.link_favorites {
+  margin-right: 15px;
+}
+
+.link_favorites:hover,
+.link_show:hover {
+  text-decoration: none;
+  color: #202125;
+  background-color: #1db84c;
+}
+
+.added {
+  background-color: chartreuse;
+}
