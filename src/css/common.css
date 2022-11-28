@@ -197,3 +197,9 @@ a {
 .added {
   background-color: chartreuse;
 }
+
+.title_favourites {
+  font-style: italic;
+  font-weight: 700;
+  color: orange;
+}

@@ -13,13 +13,9 @@ const refs = {
   pageEl: document.querySelector('body'),
   btnClose: '',
   modalFavorites: '',
-  modalShow: '',
+  favBtn: document.querySelector('.link_favorites'),
+  test: document.querySelector('.test'),
 };
-
-const localStorageIdFav = [];
-const localStorageIdShow = [];
-let isAddedFav = false;
-let isAddedShow = false;
 
 const photoApiService = new PhotoApiService();
 
@@ -62,7 +58,7 @@ function appendModalMarkup(photo) {
 }
 
 //очистити  контейнер
-function clearPhotoContainer() {
+export function clearPhotoContainer() {
   refs.galleryContainer.innerHTML = '';
 }
 
@@ -80,8 +76,7 @@ async function openModal(id) {
 
   refs.modalFavorites = document.querySelector('.modal__button-favorites');
   refs.modalShow = document.querySelector('.modal__button-show');
-  refs.modalFavorites.addEventListener('click', () => addToFavourite(id));
-  refs.modalShow.addEventListener('click', () => addToShow(id));
+  refs.modalFavorites.addEventListener('click', () => toggleToFavourite(id));
 }
 //закрити модальне вікно
 function closeModal() {
@@ -90,45 +85,32 @@ function closeModal() {
 }
 
 //додавання до списків
-function addToFavourite(id) {
-  if (isAddedFav === true) {
-    refs.modalFavorites.classList.remove('added');
-    isAddedFav = false;
+let localStorageData = JSON.parse(localStorage.getItem('idFavorites'));
+if (localStorageData === null) {
+  localStorage.setItem('idFavorites', JSON.stringify([]));
+}
 
-    console.log(`DELETE FROM addToFavourite`);
-    //якщо містить id
-    // const idFavorites = JSON.parse(localStorage.getItem('idFavorites'));
-    // const indexDelete = idFavorites.indexOf(id);
-    // console.log('🌺 -> addToFavourite -> indexDelete', indexDelete);
-    // idFavorites.splice(idFavorites, indexDelete);
-    // localStorage.removeItem('idFavorites', JSON.stringify(idFavorites));
-  } else {
+function toggleToFavourite(id) {
+  localStorageData = JSON.parse(localStorage.getItem('idFavorites'));
+  if (!localStorageData.includes(id)) {
+    console.log('-> ADD');
     refs.modalFavorites.classList.add('added');
-    isAddedFav = true;
-
-    console.log(`ADD TO addToFavourite`);
-    //#TODO
-    //доддати перевірку на існування такого запису
-    localStorageIdFav.push(id);
-    const serializedState = JSON.stringify(localStorageIdFav);
-    localStorage.setItem('idFavorites', serializedState);
+    localStorageData.push(id);
+    localStorage.setItem('idFavorites', JSON.stringify(localStorageData));
+  } else {
+    console.log('--> DELETE');
+    refs.modalFavorites.classList.remove('added');
+    let indexlocalStorageData = localStorageData.indexOf(id);
+    if (indexlocalStorageData !== -1) {
+      localStorageData.splice(indexlocalStorageData, 1);
+    }
+    localStorage.setItem('idFavorites', JSON.stringify(localStorageData));
   }
 }
 
-function addToShow(id) {
-  //   if (!isAddedShow) {
-  //     refs.modalShow.classList.remove('added');
-  //     isAddedShow = false;
+//завантаження обраних фото
 
-  //     console.log(`DELETE FROM addToFavourite`);
-  //   }
-
-  refs.modalShow.classList.add('added');
-  //   isAddedShow = true;
-
-  console.log(`ADD TO addToShow`);
-
-  localStorageIdShow.push(id);
-  const serializedState = JSON.stringify(localStorageIdShow);
-  localStorage.setItem('idShow', serializedState);
-}
+// refs.favBtn.addEventListener('click', appendFavouritesMarkup);
+// function appendFavouritesMarkup() {
+//   console.log('!!!!!!!!!!!!!');
+// }
