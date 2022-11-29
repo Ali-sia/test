@@ -1,6 +1,7 @@
 import './css/common.css';
 import PhotoApiService from './js/api-service';
 import photoTpl from './templates/photoTpl.hbs';
+import photoCardTpl from './templates/photoCardTpl.hbs';
 import modalTpl from './templates/modalTpl.hbs';
 
 //змінні
@@ -14,7 +15,6 @@ const refs = {
   btnClose: '',
   modalFavorites: '',
   favBtn: document.querySelector('.link_favorites'),
-  test: document.querySelector('.test'),
 };
 
 const photoApiService = new PhotoApiService();
@@ -46,14 +46,25 @@ async function fetchPhoto() {
 function appendPhotoMarkup(photo) {
   refs.galleryContainer.insertAdjacentHTML('beforeend', photoTpl(photo.hits));
 
-  refs.galleryImage = document.querySelectorAll('.gallery .gallery-image');
+  addEvtOnModal();
+}
 
+function addEvtOnModal() {
+  refs.galleryImage = document.querySelectorAll('.gallery .gallery-image');
   refs.galleryImage.forEach(image =>
     image.addEventListener('click', () => openModal(image.dataset.id)),
   );
 }
+
+// //вставити розмітку карток "улюбленого"
+function appendPhotoCardMarkup(photo) {
+  // refs.galleryContainer.insertAdjacentHTML('beforeend', photoCardTpl(photo));
+  refs.galleryContainer.insertAdjacentHTML('beforeend', photoTpl(photo));
+  addEvtOnModal();
+}
 //вставити розмітку модального вікна
 function appendModalMarkup(photo) {
+  refs.modalEl.innerHTML = '';
   refs.modalEl.innerHTML = modalTpl(photo);
 }
 
@@ -90,6 +101,7 @@ if (localStorageData === null) {
   localStorage.setItem('idFavorites', JSON.stringify([]));
 }
 
+// добавить проверку на уже добавленые
 function toggleToFavourite(id) {
   localStorageData = JSON.parse(localStorage.getItem('idFavorites'));
   if (!localStorageData.includes(id)) {
@@ -110,7 +122,41 @@ function toggleToFavourite(id) {
 
 //завантаження обраних фото
 
-// refs.favBtn.addEventListener('click', appendFavouritesMarkup);
-// function appendFavouritesMarkup() {
-//   console.log('!!!!!!!!!!!!!');
-// }
+refs.favBtn.addEventListener('click', appendFavouritesMarkup);
+async function appendFavouritesMarkup(e) {
+  e.preventDefault();
+  console.log('!!!!!!!!!!!!!');
+
+  //якщо пусто - то показати повідомлення
+  if (localStorageData.length === 0) {
+    console.log('- ничего((');
+
+    refs.galleryContainer.innerHTML = `
+      <h2 class="title_favourites">ooooops! you dont like anything</h2>`;
+    return;
+  }
+
+  clearPhotoContainer();
+
+  let respData = [];
+
+  for (let i = 0; i < localStorageData.length; i++) {
+    const response = await photoApiService.fetchPhotoById(localStorageData[i]);
+    refs.galleryContainer.insertAdjacentHTML(
+      'beforeend',
+      `
+    <div class='gallery-image' data-id='${response[0].id}'>
+      <div class='img-box'>
+        <img src='${response[0].previewURL}' alt='' />
+        <div class='transparent-box'>
+          <div class='caption'>
+            <p>${response[0].tags}</p>
+            <p class='opacity-low'>${response[0].id}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    `,
+    );
+  }
+}
